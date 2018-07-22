@@ -11,19 +11,21 @@ homebridge-plugin for Roomba980(Roomba 900 Software Version 2.x).
 
 # Installation
 
-## 1. Install homebridge and homebridge plugin.
-- 1-1. Install homebridge: `npm install -g homebridge`
-- 1-2. Install homebridge-roomba: `npm install -g homebridge-roomba`
+## 1. Installation
+```bash
+npm install -g homebridge-roomba
+```
 
 ## 2. Confirm the IP address to which Roomba is connected with the official application.
 - 2-1. Open the `iRobot HOME App`.
 - 2-2. Select  More ➔  Settings ➔ Wi-Fi Settings ➔ Details of robot's Wi-Fi
-- 2-3. Check IP Address items. (exsample: 192.16.xx.xx)
+- 2-3. Check IP Address items. (example: 192.168.xx.xx)
 
 ## 3. Get robotpwd and blid.
-- 3-1. Move to the directory where you installed `homebridge-roomba`.  
-     (exsample path `/Users/xxxxxx/.nodebrew/node/v7.7.1/lib/node_modules/homebridge-roomba/`)
-- 3-2. `npm run getrobotpwd 192.16.xx.xx`
+- 3-1. Move to the directory where you installed your node modules.  
+     (example path `/ust/local/lib/node_modules`)
+- 3-2. Go in the `dorita980` directory and run
+- 3-2. `npm run getpassword <Roomba IP address>`
 - 3-3. Follow the displayed message.
 ```
 Make sure your robot is on the Home Base and powered on (green lights on).
@@ -62,14 +64,17 @@ blid is `0123456789abcdef`.
 robotpwd is `:1:2345678910:ABCDEFGHIJKLMNOP`.
 
 ## 4. Update homebridge configuration file.
-```
-"accessories": [
+```json
   {
-    "accessory": "Roomba",
+    "platform": "Roomba",
     "name": "Roomba",
-    "blid":"0123456789abcdef",
-    "robotpwd":":1:2345678910:ABCDEFGHIJKLMNOP",
-    "ipaddress": "192.168.xx.xx"
+      "robots": [
+        {
+          "name": "Name of the robot in the Home app",
+          "blid":"123456789abcdefg",
+          "password": ":1:2345678901:ABCDEFGHIJKLMNOP",
+          "address": "192.168.x.xx"
+        }
+      ]
   }
-]
 ```

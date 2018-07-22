@@ -1,18 +1,20 @@
 {
-  "name": "homebridge-roomba",
-  "description": "homebridge-plugin for Roomba980",
-  "version": "1.0.1",
+  "name": "homebridge-irobot-roomba",
+  "description": "homebridge-plugin for Roomba 900 and 800 series",
+  "version": "1.0.0",
   "license": "ISC",
   "author": {
-    "name": "umesan"
+    "name": "Alexander Babel"
   },
   "main": "",
   "keywords": [
     "homebridge-plugin",
-    "unofficial",
     "iRobot",
     "Roomba",
     "980",
+    "960",
+    "900",
+    "800",
     "IoT"
   ],
   "repository": {
@@ -24,7 +26,6 @@
     "homebridge": ">=0.2.0"
   },
   "scripts": {
-    "getrobotpwd": "cd node_modules/dorita980 && npm install && node ./bin/getpassword.js",
     "lint": "eslint index.js"
   },
   "dependencies": {

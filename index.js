@@ -1,188 +1,193 @@
-/**
- * homebridge-roomba
- */
+let Service, Characteristic, Accessory, UUIDGen;
+const Local = require('dorita980').Local;
+const pluginName = 'homebridge-irobot-roomba';
+const platformName = 'Roomba';
 
-let Service;
-let Characteristic;
+const connectRetryInterval = 60000;
 
-// dorita980をrequire
-const dorita980 = require('dorita980');
-// connect後、start()までの遅延時間を設定
-const delayStartTime = 1000;
-// 遅延時間を設定
-const delayTime = 5000;
-
-
-/**
- * Homebridgeアクセサリの初期化処理
- *
- * @param {Object} log ログ
- * @param {Object} config config.jsonのaccessoriesに指定した設定値
- * @param {String} config.name アクセサリ名
- * @param {String} config.blid Roombaのblid
- * @param {String} config.robotpwd Roombaのパスワード
- * @param {String} config.ipaddress Roombaの接続しているIP Address
- * @method roombaAccessory
- */
-const roombaAccessory = function (log, config) {
-  this.log = log;
-  this.name = config.name;
-  this.blid = config.blid;
-  this.robotpwd = config.robotpwd;
-  this.ipaddress = config.ipaddress;
-};
-
-
-/**
- * Homebridgeがキャッシュされたアクセサリを復元しようとした時に呼び出され処理
- * ここでアクセサリの各挙動を設定できます
- */
-roombaAccessory.prototype = {
-  /**
-   * ユーザーがiOSアプリで「デバイスを識別する」をクリックしたときに呼び出される関数
-   *
-   * @param {Function} callback
-   * @method identify
-   */
-  identify(callback) {
-    this.log(callback);
-    this.log('Identify requested!');
-    callback();
-  },
-
-  /**
-   * setSwitchState
-   *
-   * @param {Number} powerOn 0 or 1
-   * @param {Function} callback
-   * @method setSwitchState
-   */
-  setSwitchState(powerOn, callback) {
-    const that = this;
-
-    // dorita980 Local
-    const roombaViaLocal = new dorita980.Local(this.blid, this.robotpwd, this.ipaddress);
-    if (powerOn) {
-      // 掃除をして
-      that.log('Roomba Start!');
-
-      // Roombaに接続する
-      roombaViaLocal.on('connect', () => {
-        that.log('Roomba Connect!');
-        setTimeout(() => {
-          // Roombaに掃除を開始させる
-          roombaViaLocal.start().then(() => {
-            that.log('Roomba is Ruuuuuuuuuunning!');
-
-            // 実行後、公式アプリのチャンネルを解放するためにローカル接続を切断する
-            roombaViaLocal.end();
-            callback();
-          }).catch((error) => {
-            // エラー
-            that.log('Roomba Failed: %s', error.message);
-            that.log(error);
-            callback(error);
-          });
-        },delayStartTime);
-      });
-    } else {
-      // 掃除をやめて
-      that.log('Roomba Pause & Dock!');
-      // Roombaに接続する
-      roombaViaLocal.on('connect', () => {
-        that.log('Roomba Connect!');
-
-        // Roombaの掃除を一時停止させる
-        roombaViaLocal.pause().then(() => {
-          that.log('Roomba is Pauuuuuuuuuuse!');
-          callback();
-
-          // Roombaの状態を取得する関数
-          const checkStatus = (time) => {
-            setTimeout(() => {
-              that.log('Checking the Status of Roomba!');
-
-              // Roombaの現在の状態を取得
-              roombaViaLocal.getMission().then((response) => {
-                that.log('Get Status of Roomba!');
-                that.log(response);
-                // response.cleanMissionStatus.phaseの値を見てRoombaの状況毎に処理を分岐
-                switch (response.cleanMissionStatus.phase) {
-                  case 'stop':
-                    // RoombaをDockに戻す
-                    roombaViaLocal.dock().then((() => {
-                      // 実行後、公式アプリのチャンネルを解放するためにローカル接続を切断する
-                      roombaViaLocal.end();
-                      that.log('Roomba is Back Home! Goodbye!');
-                    })).catch((error) => {
-                      that.log('Roomba Failed: %s', error.message);
-                      that.log(error);
-                    });
-                    break;
-                  case 'run':
-                    // Roombaが走行中の場合、遅延時間待ってから再度ステータスをチェックする
-                    that.log(`Roomba is still Running... Waiting ${time}ms.`);
-                    checkStatus(time);
-                    break;
-                  default:
-                    // 実行後、公式アプリのチャンネルを解放するためにローカル接続を切断する
-                    roombaViaLocal.end();
-                    that.log('Roomba is not Running....You Please Help.');
-                    break;
-                }
-              }).catch((error) => {
-                that.error(error);
-              });
-            }, time);
-          };
-          // Roombaの状態を取得する
-          checkStatus(delayTime);
-        }).catch((error) => {
-          that.log('Roomba Failed: %s', error.message);
-          callback(error);
-        });
-      });
-    }
-  },
-
-
-  /**
-   * 一連のサービスを返す関数
-   *
-   * @return {Array} サービスの配列
-   * @method getServices
-   */
-  getServices() {
-    // Homekitで定義されているサービス（機能）のうちSwitchを利用する
-    // Homekitで定義されているサービスの一覧は下記URLを参照
-    //  - http://qiita.com/tamaki/items/cf6a09729534eae8f24b#%E3%81%A9%E3%82%93%E3%81%AAservice%E3%81%8C%E3%81%82%E3%82%8B%E3%81%8B%E3%82%92%E8%AA%BF%E3%81%B9%E3%82%8B
-    const switchService = new Service.Switch(this.name);
-    switchService
-      // getCharacteristicは、既存のサービスと一致する名前またはテンプレートを検索し、それをオブジェクトとして返却する
-      .getCharacteristic(Characteristic.On)
-      // イベントにイベントリスナーを追加。
-      // setイベントは、iOSが値を設定した場合や、
-      // setValueというメソッドがhomebridgeで呼び出された場合に呼び出されます。
-      .on('set', this.setSwitchState.bind(this));
-
-    return [switchService];
-  },
-};
-
-
-/**
- * export
- */
-module.exports = (homebridge) => {
-  // Homebridgeは内部的にHap-NodeJSというパッケージをrequireしています。
-  // HAP-NodeJSは、HomeKitアクセサリサーバのNode.js実装で、
-  // 独自のHomeKitアクセサリを作成するためのAPIを提供しています。
-
-  // homebridge.hap.Serviceでは、HomeKitで定義している「とあるデバイス」の「とある機能」を提供するための雛形です。
-  // homebridge.hap.Characteristicは、Serviceに割り当てられる特定の状態を定義するための雛形です。
-
+module.exports = function (homebridge) {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
-  // homebridge.registerAccessory(プラグイン名, プラットフォーム名, コンストラクタ名);
-  homebridge.registerAccessory('homebridge-roomba', 'Roomba', roombaAccessory);
-};
+  Accessory = homebridge.platformAccessory;
+  UUIDGen = homebridge.hap.uuid;
+
+  homebridge.registerPlatform(pluginName, platformName, Roomba, true);
+}
+
+function Roomba(log, config, api) {
+  const platform = this;
+  platform.log = log;
+  platform.accessories = [];
+  platform.config = config || {};
+  platform.config.robots = platform.config.robots || [];
+
+  for (let i = 0; i < platform.config.robots.length; i++) {
+    platform.config.robots[i] = platform.config.robots[i] || {};
+    platform.config.robots[i].name = platform.config.robots[i].name || 'iRobot Roomba';
+  }
+
+  if (api) {
+    platform.api = api;
+    platform.api.on('didFinishLaunching', () => {
+      platform.log('Cached accessories loaded.');
+      if (platform.accessories.length < platform.config.robots.length) {
+        for (let i = platform.accessories.length; i < platform.config.robots.length; i++) {
+          platform.addAccessory(i);
+        }
+      }
+    });
+  }
+}
+
+Roomba.prototype.addAccessory = function (index) {
+  const platform = this;
+
+  const accessoryName = platform.config.robots[index].name;
+  const accessory = new Accessory(accessoryName, UUIDGen.generate(accessoryName));
+
+  accessory.context = { index };
+  accessory.addService(Service.Switch, accessoryName);
+
+  platform.log('Added ' + accessoryName);
+  platform.api.registerPlatformAccessories(pluginName, platformName, [accessory]);
+  platform.configureAccessory(accessory);
+}
+
+Roomba.prototype.configureAccessory = function (accessory) {
+  const platform = this;
+
+  platform.accessories.push(accessory);
+
+  const index = accessory.context.index;
+  if (!platform.config.robots[index]) {
+    platform.removeAccessory(accessory.displayName);
+    return;
+  }
+
+  if (platform.config.robots[index].name !== accessory.displayName) {
+    platform.removeAccessory(accessory.displayName);
+    platform.addAccessory(index);
+    return;
+  }
+
+  const config = platform.config.robots[index];
+  if (!(config.address && config.password && config.blid)) {
+    platform.log(`The config of ${accessory.displayName} is not complete. Please look in the readme of this plugin!`);
+    return;
+  }
+
+  accessory.context.address = config.address;
+  accessory.context.blid = config.blid;
+  accessory.context.password = config.password;
+
+  accessory.getService(Service.AccessoryInformation)
+    .setCharacteristic(Characteristic.Manufacturer, "iRobot")
+    .setCharacteristic(Characteristic.Model, "Roomba")
+    .setCharacteristic(Characteristic.SerialNumber, config.address);
+
+  accessory.getService(Service.Switch).getCharacteristic(Characteristic.On)
+    .on('get', async (callback) => {
+      try {
+        await platform.connect(accessory);
+        const status = await platform.getStatus(accessory);
+        callback(null, status === 'run' ? 1 : 0);
+      } catch (err) {
+        callback(err);
+      }
+    })
+    .on('set', async (toggle, callback) => {
+      try {
+        await platform.connect(accessory);
+        await platform.setStatus(accessory, toggle);
+        callback();
+      } catch (err) {
+        callback(err);
+      }
+    });
+
+  platform.log('Loaded accessory ' + accessory.displayName);
+}
+
+Roomba.prototype.removeAccessory = function (name) {
+  const platform = this;
+
+  platform.log("Removing accessory " + name);
+  let remainingAccessories = [], removedAccessories = [];
+
+  for (let i = 0; i < platform.accessories.length; i++) {
+    if (platform.accessories[i].displayName === name) {
+      removedAccessories.push(platform.accessories[i]);
+    } else {
+      remainingAccessories.push(platform.accessories[i]);
+    }
+  }
+
+  if (removedAccessories.length > 0) {
+    platform.api.unregisterPlatformAccessories(pluginName, platformName, removedAccessories);
+    platform.accessories = remainingAccessories;
+    platform.log(removedAccessories.length + " accessories removed.");
+  }
+}
+
+
+Roomba.prototype.getStatus = function (accessory) {
+  const platform = this;
+  return new Promise((resolve, reject) => {
+    accessory.connection.getMission().then((response) => {
+      resolve(response.cleanMissionStatus.phase);
+    }).catch((err) => {
+      platform.log(`${accessory.displayName} Failed: %s`, error.message);
+      reject(err);
+    });
+  });
+}
+
+Roomba.prototype.setStatus = function (accessory, toggle) {
+  const platform = this;
+  return new Promise((resolve, reject) => {
+    if (toggle) {
+      accessory.connection.start().then(() => {
+        platform.log(`Started ${accessory.displayName}`);
+        resolve(true);
+      }).catch((err) => {
+        platform.log(`${accessory.displayName} Failed: %s`, error.message);
+        reject(err);
+      });
+    } else {
+      accessory.connection.pause().then(() => {
+        accessory.connection.dock().then((() => {
+          resolve();
+          platform.log(`Stopped ${accessory.displayName}`);
+        })).catch((err) => {
+          platform.log(`${accessory.displayName} Failed: %s`, error.message);
+          reject(err);
+        });
+      }).catch((err) => {
+        platform.log(`${accessory.displayName} Failed: %s`, error.message);
+        reject(err);
+      });
+    }
+  });
+}
+
+Roomba.prototype.connect = async function (accessory) {
+  const platform = this;
+  if (accessory.connection) {
+    return accessory.connection;
+  }
+
+  const { blid, password, address } = accessory.context;
+  const connection = new Local(blid, password, address);
+
+  connection.on('end', () => {
+    accessory.connection = null;
+  });
+
+  return new Promise((resolve, reject) => {
+    connection.on('connect', () => {
+      accessory.connection = connection;
+      setTimeout(() => connection.end(), 30000);
+      resolve();
+    });
+  });
+}

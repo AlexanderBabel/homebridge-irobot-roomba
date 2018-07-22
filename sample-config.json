@@ -5,15 +5,18 @@
     "port": 51826,
     "pin": "031-45-156"
   },
-  "description": "for Roomba980",
-  "platforms": [],
-  "accessories": [
+  "platforms": [
     {
-      "accessory": "Roomba",
+      "platform": "Roomba",
       "name": "Roomba",
-      "blid":"123456789abcdefg",
-      "robotpwd": ":1:2345678901:ABCDEFGHIJKLMNOP",
-      "ipaddress": "192.168.x.xx"
+      "robots": [
+        {
+          "name": "Roomba",
+          "blid":"123456789abcdefg",
+          "password": ":1:2345678901:ABCDEFGHIJKLMNOP",
+          "address": "192.168.x.xx"
+        }
+      ]
     }
   ]
 }
