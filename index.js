@@ -1,18 +1,12 @@
-let Service, Characteristic, Accessory, UUIDGen;
 const Local = require('dorita980').Local;
+
 const pluginName = 'homebridge-irobot-roomba';
 const platformName = 'Roomba';
 
-const connectRetryInterval = 60000;
-
-module.exports = function (homebridge) {
-  Service = homebridge.hap.Service;
-  Characteristic = homebridge.hap.Characteristic;
-  Accessory = homebridge.platformAccessory;
-  UUIDGen = homebridge.hap.uuid;
-
-  homebridge.registerPlatform(pluginName, platformName, Roomba, true);
-}
+let Service;
+let Characteristic;
+let Accessory;
+let UUIDGen;
 
 function Roomba(log, config, api) {
   const platform = this;
@@ -21,7 +15,7 @@ function Roomba(log, config, api) {
   platform.config = config || {};
   platform.config.robots = platform.config.robots || [];
 
-  for (let i = 0; i < platform.config.robots.length; i++) {
+  for (let i = 0; i < platform.config.robots.length; i += 1) {
     platform.config.robots[i] = platform.config.robots[i] || {};
     platform.config.robots[i].name = platform.config.robots[i].name || 'iRobot Roomba';
   }
@@ -31,7 +25,7 @@ function Roomba(log, config, api) {
     platform.api.on('didFinishLaunching', () => {
       platform.log('Cached accessories loaded.');
       if (platform.accessories.length < platform.config.robots.length) {
-        for (let i = platform.accessories.length; i < platform.config.robots.length; i++) {
+        for (let i = platform.accessories.length; i < platform.config.robots.length; i += 1) {
           platform.addAccessory(i);
         }
       }
@@ -48,10 +42,10 @@ Roomba.prototype.addAccessory = function (index) {
   accessory.context = { index };
   accessory.addService(Service.Switch, accessoryName);
 
-  platform.log('Added ' + accessoryName);
+  platform.log(`Added ${accessoryName}`);
   platform.api.registerPlatformAccessories(pluginName, platformName, [accessory]);
   platform.configureAccessory(accessory);
-}
+};
 
 Roomba.prototype.configureAccessory = function (accessory) {
   const platform = this;
@@ -81,8 +75,8 @@ Roomba.prototype.configureAccessory = function (accessory) {
   accessory.context.password = config.password;
 
   accessory.getService(Service.AccessoryInformation)
-    .setCharacteristic(Characteristic.Manufacturer, "iRobot")
-    .setCharacteristic(Characteristic.Model, "Roomba")
+    .setCharacteristic(Characteristic.Manufacturer, 'iRobot')
+    .setCharacteristic(Characteristic.Model, 'Roomba')
     .setCharacteristic(Characteristic.SerialNumber, config.address);
 
   accessory.getService(Service.Switch).getCharacteristic(Characteristic.On)
@@ -105,16 +99,17 @@ Roomba.prototype.configureAccessory = function (accessory) {
       }
     });
 
-  platform.log('Loaded accessory ' + accessory.displayName);
-}
+  platform.log(`Loaded accessory ${accessory.displayName}`);
+};
 
 Roomba.prototype.removeAccessory = function (name) {
   const platform = this;
 
-  platform.log("Removing accessory " + name);
-  let remainingAccessories = [], removedAccessories = [];
+  platform.log(`Removing accessory ${name}`);
+  const remainingAccessories = [];
+  const removedAccessories = [];
 
-  for (let i = 0; i < platform.accessories.length; i++) {
+  for (let i = 0; i < platform.accessories.length; i += 1) {
     if (platform.accessories[i].displayName === name) {
       removedAccessories.push(platform.accessories[i]);
     } else {
@@ -125,9 +120,9 @@ Roomba.prototype.removeAccessory = function (name) {
   if (removedAccessories.length > 0) {
     platform.api.unregisterPlatformAccessories(pluginName, platformName, removedAccessories);
     platform.accessories = remainingAccessories;
-    platform.log(removedAccessories.length + " accessories removed.");
+    platform.log(`${removedAccessories.length} accessories removed.`);
   }
-}
+};
 
 
 Roomba.prototype.getStatus = function (accessory) {
@@ -136,11 +131,11 @@ Roomba.prototype.getStatus = function (accessory) {
     accessory.connection.getMission().then((response) => {
       resolve(response.cleanMissionStatus.phase);
     }).catch((err) => {
-      platform.log(`${accessory.displayName} Failed: %s`, error.message);
+      platform.log(`${accessory.displayName} Failed: %s`, err.message);
       reject(err);
     });
   });
-}
+};
 
 Roomba.prototype.setStatus = function (accessory, toggle) {
   const platform = this;
@@ -150,7 +145,7 @@ Roomba.prototype.setStatus = function (accessory, toggle) {
         platform.log(`Started ${accessory.displayName}`);
         resolve(true);
       }).catch((err) => {
-        platform.log(`${accessory.displayName} Failed: %s`, error.message);
+        platform.log(`${accessory.displayName} Failed: %s`, err.message);
         reject(err);
       });
     } else {
@@ -159,19 +154,19 @@ Roomba.prototype.setStatus = function (accessory, toggle) {
           resolve();
           platform.log(`Stopped ${accessory.displayName}`);
         })).catch((err) => {
-          platform.log(`${accessory.displayName} Failed: %s`, error.message);
+          platform.log(`${accessory.displayName} Failed: %s`, err.message);
           reject(err);
         });
       }).catch((err) => {
-        platform.log(`${accessory.displayName} Failed: %s`, error.message);
+        platform.log(`${accessory.displayName} Failed: %s`, err.message);
         reject(err);
       });
     }
   });
-}
+};
 
+/* eslint max-len: ["error", { "ignoreComments": true }] no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["accessory"] }] */
 Roomba.prototype.connect = async function (accessory) {
-  const platform = this;
   if (accessory.connection) {
     return accessory.connection;
   }
@@ -183,11 +178,20 @@ Roomba.prototype.connect = async function (accessory) {
     accessory.connection = null;
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     connection.on('connect', () => {
       accessory.connection = connection;
       setTimeout(() => connection.end(), 30000);
       resolve();
     });
   });
-}
+};
+
+module.exports = function (homebridge) {
+  Service = homebridge.hap.Service;
+  Characteristic = homebridge.hap.Characteristic;
+  Accessory = homebridge.platformAccessory;
+  UUIDGen = homebridge.hap.uuid;
+
+  homebridge.registerPlatform(pluginName, platformName, Roomba, true);
+};
