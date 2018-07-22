@@ -17,9 +17,13 @@
     "800",
     "IoT"
   ],
+  "bugs": {
+    "url": "https://github.com/AlexanderBabel/homebridge-irobot-roomba.git/issues"
+  },
+  "homepage": "https://github.com/AlexanderBabel/homebridge-irobot-roomba.git#readme",
   "repository": {
     "type": "git",
-    "url": "git://github.com/umesan/homebridge-roomba"
+    "url": "git://github.com/AlexanderBabel/homebridge-irobot-roomba"
   },
   "engines": {
     "node": ">=0.12.0",
@@ -36,7 +40,7 @@
     "eslint-config-airbnb": "^11.1.0",
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-jsx-a11y": "^2.2.2",
-     "eslint-plugin-react": "^6.3.0",
+    "eslint-plugin-react": "^6.3.0",
     "eslint-loader": "^1.6.1"
   }
 }
