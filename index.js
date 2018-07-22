@@ -17,7 +17,8 @@ function Roomba(log, config, api) {
 
   for (let i = 0; i < platform.config.robots.length; i += 1) {
     platform.config.robots[i] = platform.config.robots[i] || {};
-    platform.config.robots[i].name = platform.config.robots[i].name || 'iRobot Roomba';
+    platform.config.robots[i].name = platform.config.robots[i].name
+      || 'iRobot Roomba';
   }
 
   if (api) {
@@ -25,7 +26,8 @@ function Roomba(log, config, api) {
     platform.api.on('didFinishLaunching', () => {
       platform.log('Cached accessories loaded.');
       if (platform.accessories.length < platform.config.robots.length) {
-        for (let i = platform.accessories.length; i < platform.config.robots.length; i += 1) {
+        for (let i = platform.accessories.length;
+          i < platform.config.robots.length; i += 1) {
           platform.addAccessory(i);
         }
       }
@@ -37,13 +39,15 @@ Roomba.prototype.addAccessory = function (index) {
   const platform = this;
 
   const accessoryName = platform.config.robots[index].name;
-  const accessory = new Accessory(accessoryName, UUIDGen.generate(accessoryName));
+  const accessory = new Accessory(accessoryName,
+    UUIDGen.generate(accessoryName));
 
   accessory.context = { index };
   accessory.addService(Service.Switch, accessoryName);
 
   platform.log(`Added ${accessoryName}`);
-  platform.api.registerPlatformAccessories(pluginName, platformName, [accessory]);
+  platform.api.registerPlatformAccessories(pluginName, platformName,
+    [accessory]);
   platform.configureAccessory(accessory);
 };
 
@@ -66,7 +70,8 @@ Roomba.prototype.configureAccessory = function (accessory) {
 
   const config = platform.config.robots[index];
   if (!(config.address && config.password && config.blid)) {
-    platform.log(`The config of ${accessory.displayName} is not complete. Please look in the readme of this plugin!`);
+    platform.log(`The config of ${accessory.displayName
+      } is not complete. Please look in the readme of this plugin!`);
     return;
   }
 
@@ -118,7 +123,8 @@ Roomba.prototype.removeAccessory = function (name) {
   }
 
   if (removedAccessories.length > 0) {
-    platform.api.unregisterPlatformAccessories(pluginName, platformName, removedAccessories);
+    platform.api.unregisterPlatformAccessories(pluginName, platformName,
+      removedAccessories);
     platform.accessories = remainingAccessories;
     platform.log(`${removedAccessories.length} accessories removed.`);
   }
