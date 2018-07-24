@@ -43,7 +43,6 @@ Roomba.prototype.addAccessory = function (index) {
     UUIDGen.generate(accessoryName));
 
   accessory.context = { index };
-  accessory.addService(Service.Switch, accessoryName);
 
   platform.log(`Added ${accessoryName}`);
   platform.api.registerPlatformAccessories(pluginName, platformName,
@@ -75,16 +74,24 @@ Roomba.prototype.configureAccessory = function (accessory) {
     return;
   }
 
+  accessory.service = function (service) {
+    if (this.getService(service)) {
+      return this.getService(service);
+    }
+    return this.addService(service);
+  };
+
   accessory.context.address = config.address;
   accessory.context.blid = config.blid;
   accessory.context.password = config.password;
 
-  accessory.getService(Service.AccessoryInformation)
+  accessory.service(Service.AccessoryInformation)
     .setCharacteristic(Characteristic.Manufacturer, 'iRobot')
     .setCharacteristic(Characteristic.Model, 'Roomba')
     .setCharacteristic(Characteristic.SerialNumber, config.address);
 
-  accessory.getService(Service.Switch).getCharacteristic(Characteristic.On)
+  accessory.service(Service.Fan)
+    .getCharacteristic(Characteristic.On)
     .on('get', async (callback) => {
       try {
         await platform.connect(accessory);
@@ -135,6 +142,11 @@ Roomba.prototype.getStatus = function (accessory) {
   const platform = this;
   return new Promise((resolve, reject) => {
     accessory.connection.getMission().then((response) => {
+      accessory.service(Service.BatteryService)
+        .setCharacteristic(Characteristic.BatteryLevel, response.batPct)
+        .setCharacteristic(Characteristic.ChargingState,
+          response.cleanMissionStatus.phase === 'charge' ? 1 : 0);
+
       resolve(response.cleanMissionStatus.phase);
     }).catch((err) => {
       platform.log(`${accessory.displayName} Failed: %s`, err.message);
