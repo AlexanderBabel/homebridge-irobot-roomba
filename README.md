@@ -2,8 +2,8 @@
 
 [![NPM version][npm-image]][npm-url]
 
-[npm-image]: https://img.shields.io/npm/v/homebridge-roomba.svg
-[npm-url]: https://www.npmjs.com/package/homebridge-roomba
+[npm-image]: https://img.shields.io/npm/v/homebridge-irobot-roomba.svg
+[npm-url]: https://www.npmjs.com/package/homebridge-irobot-roomba
 
 Control your iRobot Roomba through HomeKit. (Available for the 800 and 900 series with V2.0 or higher)
 
