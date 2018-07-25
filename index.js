@@ -185,6 +185,7 @@ Roomba.prototype.setStatus = function (accessory, toggle) {
 
 /* eslint max-len: ["error", { "ignoreComments": true }] no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["accessory"] }] */
 Roomba.prototype.connect = async function (accessory) {
+  const platform = this;
   if (accessory.connection) {
     return accessory.connection;
   }
@@ -202,6 +203,12 @@ Roomba.prototype.connect = async function (accessory) {
       setTimeout(() => connection.end(), 30000);
       resolve();
     });
+
+    setTimeout(() => {
+      if (!accessory.connection) {
+        platform.log(`Could not connect to ${accessory.displayName}`);
+      }
+    }, 25000);
   });
 };
 

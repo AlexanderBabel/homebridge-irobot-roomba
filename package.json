@@ -1,6 +1,6 @@
 {
   "name": "homebridge-irobot-roomba",
-  "description": "homebridge-plugin for Roomba 900 and 800 series",
+  "description": "Control your iRobot Roomba with Siri and HomeKit",
   "version": "1.0.0",
   "license": "ISC",
   "author": {

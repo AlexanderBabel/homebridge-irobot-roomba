@@ -5,9 +5,9 @@
 [npm-image]: https://img.shields.io/npm/v/homebridge-roomba.svg
 [npm-url]: https://www.npmjs.com/package/homebridge-roomba
 
-homebridge-plugin for Roomba980(Roomba 900 Software Version 2.x).
+Control your iRobot Roomba through HomeKit. (Available for the 800 and 900 series with V2.0 or higher)
 
-[![homebridge-plugin for Roomba980](https://cloud.githubusercontent.com/assets/3190760/25561826/ac495bda-2dae-11e7-96be-e7d8409e2901.gif)](https://www.youtube.com/watch?v=BbHbArJ95g0)
+![Demo](https://user-images.githubusercontent.com/13570439/43205073-cf3c1d3a-9022-11e8-8055-9adaad1f3d95.gif)
 
 # Installation
 
@@ -21,11 +21,11 @@ npm install -g homebridge-roomba
 - 2-2. Select  More ➔  Settings ➔ Wi-Fi Settings ➔ Details of robot's Wi-Fi
 - 2-3. Check IP Address items. (example: 192.168.xx.xx)
 
-## 3. Get robotpwd and blid.
+## 3. Get password and blid.
 - 3-1. Move to the directory where you installed your node modules.  
      (example path `/ust/local/lib/node_modules`)
-- 3-2. Go in the `dorita980` directory and run
-- 3-2. `npm run getpassword <Roomba IP address>`
+- 3-2. Go in the `dorita980` directory
+- 3-2. run `npm run getpassword <Roomba IP address>`
 - 3-3. Follow the displayed message.
 ```
 Make sure your robot is on the Home Base and powered on (green lights on).
@@ -39,8 +39,8 @@ Please check the following points and try several times.
 
 - Is the environment installing Rumba and homebridge connected to the same wifi?
 - Is Rumba in the Dock and in a charged state?
-- Please try running "npm run getrobotpwd 192.16.xx.xx" after the sound has sounded after pressing the home button of the room for 2 seconds
-- Please check the version of Node.js. I confirmed that it works with "v 7.7.1".
+- Please try running "npm run getpassword 192.16.xx.xx" after the sound has sounded after pressing the home button of the room for 2 seconds
+- Please check the version of Node.js. I confirmed that it works with "v7.7.1", "v8.9.0" or "v9.1.0".
 
 If successful, the following message will be displayed.
 Please check "blid" and "Password" of displayed message.
@@ -61,20 +61,20 @@ Password=> :1:2345678910:ABCDEFGHIJKLMNOP <= Yes, all this string.
 ```
 
 blid is `0123456789abcdef`.
-robotpwd is `:1:2345678910:ABCDEFGHIJKLMNOP`.
+password is `:1:2345678910:ABCDEFGHIJKLMNOP`.
 
 ## 4. Update homebridge configuration file.
 ```json
   {
     "platform": "Roomba",
     "name": "Roomba",
-      "robots": [
-        {
-          "name": "Name of the robot in the Home app",
-          "blid":"123456789abcdefg",
-          "password": ":1:2345678901:ABCDEFGHIJKLMNOP",
-          "address": "192.168.x.xx"
-        }
-      ]
+    "robots": [
+      {
+        "name": "Name of the robot in the Home app",
+        "blid":"123456789abcdefg",
+        "password": ":1:2345678901:ABCDEFGHIJKLMNOP",
+        "address": "192.168.x.xx"
+      }
+    ]
   }
 ```
