@@ -35,6 +35,15 @@ function Roomba(log, config, api) {
   }
 }
 
+module.exports = (homebridge) => {
+  Service = homebridge.hap.Service;
+  Characteristic = homebridge.hap.Characteristic;
+  Accessory = homebridge.platformAccessory;
+  UUIDGen = homebridge.hap.uuid;
+
+  homebridge.registerPlatform(pluginName, platformName, Roomba, true);
+};
+
 Roomba.prototype.addAccessory = function addAccessory(index) {
   const platform = this;
 
@@ -213,13 +222,4 @@ Roomba.prototype.connect = async function connect(accessory) {
       }
     }, 25000);
   });
-};
-
-module.exports = (homebridge) => {
-  Service = homebridge.hap.Service;
-  Characteristic = homebridge.hap.Characteristic;
-  Accessory = homebridge.platformAccessory;
-  UUIDGen = homebridge.hap.uuid;
-
-  homebridge.registerPlatform(pluginName, platformName, Roomba, true);
 };
