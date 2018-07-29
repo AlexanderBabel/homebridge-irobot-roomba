@@ -35,7 +35,7 @@ function Roomba(log, config, api) {
   }
 }
 
-Roomba.prototype.addAccessory = function (index) {
+Roomba.prototype.addAccessory = function addAccessory(index) {
   const platform = this;
 
   const accessoryName = platform.config.robots[index].name;
@@ -50,7 +50,7 @@ Roomba.prototype.addAccessory = function (index) {
   platform.configureAccessory(accessory);
 };
 
-Roomba.prototype.configureAccessory = function (accessory) {
+Roomba.prototype.configureAccessory = function configureAccessory(accessory) {
   const platform = this;
 
   platform.accessories.push(accessory);
@@ -74,11 +74,11 @@ Roomba.prototype.configureAccessory = function (accessory) {
     return;
   }
 
-  accessory.service = function (service) {
-    if (this.getService(service)) {
-      return this.getService(service);
+  accessory.service = function service(serviceName) {
+    if (this.getService(serviceName)) {
+      return this.getService(serviceName);
     }
-    return this.addService(service);
+    return this.addService(serviceName);
   };
 
   accessory.context.address = config.address;
@@ -89,6 +89,10 @@ Roomba.prototype.configureAccessory = function (accessory) {
     .setCharacteristic(Characteristic.Manufacturer, 'iRobot')
     .setCharacteristic(Characteristic.Model, 'Roomba')
     .setCharacteristic(Characteristic.SerialNumber, config.address);
+
+  if (accessory.getService(Service.Switch)) {
+    accessory.removeService(accessory.getService(Service.Switch));
+  }
 
   accessory.service(Service.Fan)
     .getCharacteristic(Characteristic.On)
@@ -114,7 +118,7 @@ Roomba.prototype.configureAccessory = function (accessory) {
   platform.log(`Loaded accessory ${accessory.displayName}`);
 };
 
-Roomba.prototype.removeAccessory = function (name) {
+Roomba.prototype.removeAccessory = function removeAccessory(name) {
   const platform = this;
 
   platform.log(`Removing accessory ${name}`);
@@ -138,7 +142,7 @@ Roomba.prototype.removeAccessory = function (name) {
 };
 
 
-Roomba.prototype.getStatus = function (accessory) {
+Roomba.prototype.getStatus = function getStatus(accessory) {
   const platform = this;
   return new Promise((resolve, reject) => {
     accessory.connection.getMission().then((response) => {
@@ -155,7 +159,7 @@ Roomba.prototype.getStatus = function (accessory) {
   });
 };
 
-Roomba.prototype.setStatus = function (accessory, toggle) {
+Roomba.prototype.setStatus = function setStatus(accessory, toggle) {
   const platform = this;
   return new Promise((resolve, reject) => {
     if (toggle) {
@@ -184,8 +188,7 @@ Roomba.prototype.setStatus = function (accessory, toggle) {
 };
 
 /* eslint max-len: ["error", { "ignoreComments": true }] no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["accessory"] }] */
-Roomba.prototype.connect = async function (accessory) {
-  const platform = this;
+Roomba.prototype.connect = async function connect(accessory) {
   if (accessory.connection) {
     return accessory.connection;
   }
@@ -197,7 +200,7 @@ Roomba.prototype.connect = async function (accessory) {
     accessory.connection = null;
   });
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     connection.on('connect', () => {
       accessory.connection = connection;
       setTimeout(() => connection.end(), 30000);
@@ -206,13 +209,13 @@ Roomba.prototype.connect = async function (accessory) {
 
     setTimeout(() => {
       if (!accessory.connection) {
-        platform.log(`Could not connect to ${accessory.displayName}`);
+        reject(new Error(`Could not connect to ${accessory.displayName}`));
       }
     }, 25000);
   });
 };
 
-module.exports = function (homebridge) {
+module.exports = (homebridge) => {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
   Accessory = homebridge.platformAccessory;
