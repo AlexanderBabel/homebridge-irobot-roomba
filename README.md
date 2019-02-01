@@ -1,3 +1,5 @@
+**NOTE: I now longer own an iRobot roboter. Therefore I will not make any updates for this porject!**
+
 # homebridge-roomba
 
 [![NPM version][npm-image]][npm-url]
